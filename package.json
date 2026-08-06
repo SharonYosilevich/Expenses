@@ -1,0 +1,54 @@
+{
+  "name": "home-expenses",
+  "productName": "הוצאות הבית",
+  "version": "1.0.0",
+  "description": "ניהול הוצאות והכנסות חודשיות של הבית - מקומי לחלוטין, ללא ענן",
+  "main": "electron/main.js",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "dist": "vite build && electron-builder"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.9.155",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.3",
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "vite": "^5.4.11",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^2.1.8"
+  },
+  "build": {
+    "appId": "com.yosilevich.homeexpenses",
+    "productName": "הוצאות הבית",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "!electron/**/*.test.js"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

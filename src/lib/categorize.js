@@ -1,0 +1,41 @@
+const CARD_AGGREGATE_PATTERNS = [
+  /חיוב לכרטיס/,
+  /ח חיוב לכרטיס/,
+  /ישראכרט/,
+  /דיינרס/,
+  /מקס איט פי/,
+  /(^|\s)ויזה(\s|$)/
+]
+
+const BALANCE_CARRY_PATTERNS = [/העברה מדף קודם/, /יתרה$/]
+
+/**
+ * Bank statements often show a lump "חיוב לכרטיס ויזה" line - the real
+ * category breakdown (food/fuel/fun) lives in the detailed card statement.
+ * Flag these so the review grid can warn about double-counting.
+ */
+export function isLikelyCardAggregate(description) {
+  const d = description || ''
+  return CARD_AGGREGATE_PATTERNS.some((re) => re.test(d))
+}
+
+export function isLikelyBalanceCarry(description) {
+  const d = description || ''
+  return BALANCE_CARRY_PATTERNS.some((re) => re.test(d))
+}
+
+/**
+ * Longest-keyword-wins match against the description.
+ */
+export function suggestFromRules(description, rules) {
+  const d = (description || '').trim()
+  if (!d) return null
+  let best = null
+  for (const rule of rules) {
+    if (!rule.keyword) continue
+    if (d.includes(rule.keyword)) {
+      if (!best || rule.keyword.length > best.keyword.length) best = rule
+    }
+  }
+  return best
+}
