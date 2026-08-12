@@ -7,6 +7,13 @@ export default function Settings() {
   const [newCategory, setNewCategory] = useState('')
   const [newPerson, setNewPerson] = useState('')
   const [backupMsg, setBackupMsg] = useState('')
+  const [newRule, setNewRule] = useState(() => ({
+    keyword: '',
+    type: 'expense',
+    category: (settings.categories || [])[0] || '',
+    person: (settings.people || [])[0] || '',
+    isFixed: false
+  }))
 
   useEffect(() => {
     window.api.getDataPath().then(setDataPath)
@@ -38,6 +45,13 @@ export default function Settings() {
     const rules = [...(settings.rules || [])]
     rules.splice(idx, 1)
     updateSettings({ rules })
+  }
+
+  function addRule() {
+    const keyword = newRule.keyword.trim()
+    if (!keyword) return
+    updateSettings({ rules: [...(settings.rules || []), { ...newRule, keyword }] })
+    setNewRule({ ...newRule, keyword: '' })
   }
 
   function removeMapping(name) {
@@ -119,6 +133,55 @@ export default function Settings() {
       </div>
 
       <div className="section-title">חוקי סיווג אוטומטי</div>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: -6 }}>
+        כל תנועה שהתיאור המקורי שלה מכיל את מילת המפתח תסווג אוטומטית כך בפעם הבאה שמייבאים - לא צריך לסווג שוב ידנית.
+      </p>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="form-row">
+          <label>מילת מפתח</label>
+          <input
+            type="text"
+            placeholder='למשל: "שופרסל" או "עיריית נתניה"'
+            value={newRule.keyword}
+            onChange={(e) => setNewRule({ ...newRule, keyword: e.target.value })}
+            onKeyDown={(e) => e.key === 'Enter' && addRule()}
+          />
+        </div>
+        <div className="form-row">
+          <label>סוג</label>
+          <select value={newRule.type} onChange={(e) => setNewRule({ ...newRule, type: e.target.value })}>
+            <option value="expense">הוצאה</option>
+            <option value="income">הכנסה</option>
+          </select>
+          <label>קטגוריה</label>
+          <select value={newRule.category} onChange={(e) => setNewRule({ ...newRule, category: e.target.value })}>
+            {(settings.categories || []).map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <label>עבור מי</label>
+          <select value={newRule.person} onChange={(e) => setNewRule({ ...newRule, person: e.target.value })}>
+            {(settings.people || []).map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <label style={{ minWidth: 'auto' }}>
+            <input
+              type="checkbox"
+              checked={newRule.isFixed}
+              onChange={(e) => setNewRule({ ...newRule, isFixed: e.target.checked })}
+            />{' '}
+            קבוע
+          </label>
+          <button className="btn primary" onClick={addRule} disabled={!newRule.keyword.trim()}>
+            הוספת חוק
+          </button>
+        </div>
+      </div>
       <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
         {(settings.rules || []).length === 0 ? (
           <div className="empty-state">אין חוקים עדיין - הם נוצרים אוטומטית בזמן ייבוא כשמסמנים "הוסף כחוק"</div>

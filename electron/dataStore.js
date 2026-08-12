@@ -8,11 +8,45 @@ const DEFAULT_DATA = {
     categories: ['בית', 'מזון', 'כיף', 'דלק', 'גנים', 'אחר'],
     people: ['שרון', 'יהונתן', 'בית'],
     rules: [
+      // הוצאות בית קבועות (הוראות קבע נפוצות)
       { keyword: 'משכנתא', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
       { keyword: 'ועד בית', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
       { keyword: 'קופת גמל', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
       { keyword: 'חברת החשמל', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
       { keyword: 'ארנונה', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'עירית', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'עיריית', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'סלקום', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'פרטנר', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'הוט', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'בזק', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'דמי כרטיס', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      // ביטוחים ופנסיה (בד"כ הוראת קבע)
+      { keyword: 'הפניקס', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'מגדל', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'כלל ביטוח', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'הראל', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'מנורה', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'כללית', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'מכבי', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'מאוחדת', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'לאומית', category: 'בית', person: 'בית', isFixed: true, type: 'expense' },
+      // גנים / חינוך (מינהל קהילתי, צהרונים וכו')
+      { keyword: 'מינהל קהילתי', category: 'גנים', person: 'בית', isFixed: true, type: 'expense' },
+      { keyword: 'צהרון', category: 'גנים', person: 'בית', isFixed: true, type: 'expense' },
+      // דלק
+      { keyword: 'פז ', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'סונול', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'דור אלון', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'דלק מנוע', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
+      // מזון - רשתות סופר נפוצות
+      { keyword: 'שופרסל', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'יוחננוף', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'רמי לוי', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'ויקטורי', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'טיב טעם', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'אושר עד', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
+      // הכנסות
       { keyword: 'משכורת', category: 'משכורת', person: 'בית', isFixed: false, type: 'income' },
       { keyword: 'סיטיבנק', category: 'משכורת', person: 'בית', isFixed: false, type: 'income' },
       { keyword: 'ביטוח לאומי', category: 'קצבאות', person: 'בית', isFixed: false, type: 'income' }

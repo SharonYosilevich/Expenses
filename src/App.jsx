@@ -44,12 +44,26 @@ export default function App() {
         ))}
       </aside>
       <main className="main">
-        {page === 'dashboard' && <Dashboard />}
-        {page === 'charts' && <ChartsPage />}
-        {page === 'history' && <History />}
-        {page === 'transactions' && <Transactions />}
-        {page === 'import' && <Import onDone={() => setPage('transactions')} />}
-        {page === 'settings' && <Settings />}
+        {/* Every page stays mounted and is only hidden via CSS - switching tabs
+            must never wipe in-progress work (e.g. mid-review import state). */}
+        <div style={{ display: page === 'dashboard' ? 'block' : 'none' }}>
+          <Dashboard />
+        </div>
+        <div style={{ display: page === 'charts' ? 'block' : 'none' }}>
+          <ChartsPage />
+        </div>
+        <div style={{ display: page === 'history' ? 'block' : 'none' }}>
+          <History />
+        </div>
+        <div style={{ display: page === 'transactions' ? 'block' : 'none' }}>
+          <Transactions />
+        </div>
+        <div style={{ display: page === 'import' ? 'block' : 'none' }}>
+          <Import onDone={() => setPage('transactions')} />
+        </div>
+        <div style={{ display: page === 'settings' ? 'block' : 'none' }}>
+          <Settings />
+        </div>
       </main>
     </div>
   )
