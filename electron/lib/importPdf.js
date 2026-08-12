@@ -95,9 +95,11 @@ function assignToColumn(x, boundaries) {
  * review/edit grid is the safety net for anything misparsed.
  */
 async function parsePdfBuffer(buffer) {
-  const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js')
+  // pdfjs-dist v4 dropped its CommonJS build - only ships .mjs now, so this
+  // has to be a dynamic import() even though this file itself is CommonJS.
+  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
   const uint8 = new Uint8Array(buffer)
-  const doc = await pdfjsLib.getDocument({ data: uint8, disableWorker: true }).promise
+  const doc = await pdfjsLib.getDocument({ data: uint8 }).promise
 
   const allRows = []
   let maxCols = 0
