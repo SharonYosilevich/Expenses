@@ -39,8 +39,8 @@ const DEFAULT_DATA = {
       { keyword: 'סונול', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'דור אלון', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'דלק מנוע', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'תפוז', category: 'דלק', person: 'בית', isFixed: false, type: 'expense' },
       // מזון - רשתות סופר נפוצות
-      { keyword: 'תפוז', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'שופרסל', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'יוחננוף', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'רמי לוי', category: 'מזון', person: 'בית', isFixed: false, type: 'expense' },
