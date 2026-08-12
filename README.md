@@ -58,8 +58,10 @@ npm run dist         # build + electron-builder -> release/*.exe
 
 7. **`pdfjs-dist` חייב להיות ב-`dependencies`** (לא `devDependencies`) כי הוא נטען ב-runtime ב-main process (`electron/lib/importPdf.js`) ו-`electron-builder` אורז רק production dependencies.
 
+8. **`pdfjs-dist` v4 הפסיק לספק build של CommonJS** - `require('pdfjs-dist/legacy/build/pdf.js')` לא קיים יותר, יש רק `.mjs`. חייבים `await import('pdfjs-dist/legacy/build/pdf.mjs')` (דינמי) מתוך `importPdf.js` שהוא עצמו CommonJS. זה גרם לקריסה מלאה של ייבוא PDF באפליקציה הארוזה (asar) - `require` נכשל בזמן ריצה כי הקובץ פשוט לא קיים. תוקן ונבדק דרך ה-exe הארוז עצמו (`release/win-unpacked/*.exe`), לא רק ב-dev.
+
 ## מה עוד לא נבדק/נבנה
 
-- ייבוא PDF (`importPdf.js`) נבדק רק מבחינת קומפילציה, **לא נבדק על קובץ PDF אמיתי מקצה לקצה** (ה-PDF שסופק בשיחה שימש רק ללימוד המבנה). כדאי לבדוק את זה בהזדמנות הבאה עם קובץ PDF אמיתי.
+- ייבוא PDF נבדק בפועל על שני סוגי קבצים אמיתיים: דף עו"ש בנק (יוצא נקי יחסית - כמעט שורה אחת לתנועה) ודף אשראי מפורט (הרבה יותר מבולגן - כל עסקה פרוסה על כמה שורות ויזואליות ב-PDF: תת-שורת "מזהה כרטיס", שורת בית-עסק+סכום, ותגית "Apple Pay" - כל אחת נשלפת כשורה נפרדת, ודורש עריכה ידנית משמעותית במסך הבדיקה). **המלצה לשרון: לדפי אשראי מפורטים עדיף לייבא את קובץ ה-Excel** (יש אפשרות ייצוא כזו באתר הבנק) - הוא נכנס נקי, שורה אחת לעסקה.
 - אין אייקון מותאם אישית ל-installer (משתמש באייקון ברירת המחדל של Electron) - `build/icon.ico` אם ירצו להוסיף בעתיד (ולעדכן `package.json` -> `build.win.icon`).
 - אין code signing (חתימה דיגיטלית) ל-installer - Windows SmartScreen עלול להציג אזהרה "Unknown publisher" בהתקנה הראשונה; זה תקין וניתן ללחוץ "עוד מידע" -> "הפעל בכל זאת".
