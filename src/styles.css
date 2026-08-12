@@ -4,8 +4,8 @@
   --surface-2: #ffffff;
   --page: #f9f9f7;
   --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
+  --text-secondary: #1c1c1a;
+  --text-muted: #3a3936;
   --gridline: #e1e0d9;
   --baseline: #c3c2b7;
   --border: rgba(11, 11, 11, 0.1);
@@ -203,7 +203,7 @@ textarea {
   padding: 6px 14px;
   border-radius: 999px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
@@ -227,7 +227,7 @@ textarea {
 }
 
 .stat-tile .label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 6px;
 }
@@ -249,7 +249,7 @@ textarea {
 table.data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 table.data-table th,
@@ -261,9 +261,9 @@ table.data-table td {
 }
 
 table.data-table th {
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 13px;
   position: sticky;
   top: 0;
   background: var(--surface-1);
