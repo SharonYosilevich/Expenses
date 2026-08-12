@@ -88,6 +88,56 @@ function assignToColumn(x, boundaries) {
   return closestIdx
 }
 
+const TRAILING_DATE_RE = /^(.+?)\s+(\d{2}\/\d{2}\/\d{4})$/
+const REVERSED_DECIMAL_RE = /^\.(\d{2})\s+([\d,]+)\s*(₪)?$/
+
+/**
+ * PDF bidi rendering sometimes splits a currency amount's fractional part
+ * from its integer part into separate text runs, which come out reordered
+ * (e.g. "281.89 ₪" extracted as ".89 281 ₪"). Detect and un-reverse it.
+ */
+function fixReversedDecimal(text) {
+  const match = text.trim().match(REVERSED_DECIMAL_RE)
+  if (!match) return text
+  const [, fraction, integer, currency] = match
+  return `${integer}.${fraction}${currency ? ' ' + currency : ''}`
+}
+
+/**
+ * Some statement layouts (e.g. detailed credit-card statements) render the
+ * merchant name and the transaction date close enough together that column
+ * clustering merges them into one column, so no separate date column ever
+ * exists to map. Detect a column where most non-empty values end in a
+ * DD/MM/YYYY date and split it into two columns for every row, uniformly.
+ */
+function splitMergedTrailingDateColumn(rows) {
+  const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 0)
+  let mergedCol = -1
+  for (let c = 0; c < maxCols; c++) {
+    const values = rows.map((r) => (r[c] || '').trim()).filter(Boolean)
+    if (values.length < 3) continue
+    const matchCount = values.filter((v) => TRAILING_DATE_RE.test(v)).length
+    if (matchCount / values.length >= 0.5) {
+      mergedCol = c
+      break
+    }
+  }
+  if (mergedCol === -1) return rows
+
+  return rows.map((row) => {
+    const next = [...row]
+    const raw = (next[mergedCol] || '').trim()
+    const match = raw.match(TRAILING_DATE_RE)
+    if (match) {
+      next[mergedCol] = match[1]
+      next.splice(mergedCol + 1, 0, match[2])
+    } else {
+      next.splice(mergedCol + 1, 0, '')
+    }
+    return next
+  })
+}
+
 /**
  * Parses a PDF buffer (Hebrew bank/credit-card statement style) into raw
  * 2D rows, best-effort. Boilerplate lines (interest terms, branch headers,
@@ -134,15 +184,18 @@ async function parsePdfBuffer(buffer) {
     }
   }
 
+  const fixedRows = allRows.map((row) => row.map(fixReversedDecimal))
+  const normalizedRows = splitMergedTrailingDateColumn(fixedRows)
+
   return {
     sheets: [
       {
         name: 'PDF',
-        rows: allRows,
+        rows: normalizedRows,
         suggestedHeaderRowIndex: 0
       }
     ]
   }
 }
 
-module.exports = { parsePdfBuffer, isBoilerplate }
+module.exports = { parsePdfBuffer, isBoilerplate, splitMergedTrailingDateColumn, fixReversedDecimal }

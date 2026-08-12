@@ -139,6 +139,10 @@ export default function Import({ onDone }) {
     setDraftRows((prev) => prev.map((r) => (r._key === key ? { ...r, ...patch } : r)))
   }
 
+  function setAllIncluded(include) {
+    setDraftRows((prev) => prev.map((r) => ({ ...r, include })))
+  }
+
   function confirmImport() {
     const toSave = draftRows.filter((r) => r.include && r.date && r.amount > 0)
     const now = new Date().toISOString()
@@ -244,6 +248,7 @@ export default function Import({ onDone }) {
         <ReviewStep
           draftRows={draftRows}
           updateDraft={updateDraft}
+          setAllIncluded={setAllIncluded}
           categories={settings.categories || []}
           people={settings.people || []}
           includedCount={includedCount}
@@ -300,6 +305,12 @@ function MappingStep({
 
   return (
     <div className="card">
+      <p style={{ color: 'var(--text-secondary)', marginTop: 0, fontSize: '0.9375rem' }}>
+        טענו את הקובץ שבחרת - עכשיו רק צריך לעזור לנו להבין אותו, בשני צעדים קצרים: <strong>קודם</strong> לסמן איזו
+        שורה בטבלה למטה היא שורת הכותרות (השורה עם שמות העמודות), <strong>ואז</strong> להגיד לנו איזו עמודה היא
+        תאריך, איזו תיאור, ואיזו סכום.
+      </p>
+
       <div className="form-row">
         <label>סוג מקור</label>
         <input
@@ -315,8 +326,9 @@ function MappingStep({
           ))}
         </datalist>
       </div>
-      <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: -4 }}>
-        אם בוחרים שם של סוג מקור שכבר יובא בעבר, מיפוי העמודות ישוחזר אוטומטית.
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: -4 }}>
+        תנו שם לסוג המקור (למשל "עו״ש בנק" או "ויזה") - אם בפעם הבאה תבחרו את אותו שם, שני הצעדים למטה יתמלאו
+        אוטומטית ולא תצטרכו לעשות את זה שוב.
       </p>
 
       {fileInfo.sheets.length > 1 && (
@@ -332,7 +344,11 @@ function MappingStep({
         </div>
       )}
 
-      <div className="section-title">איזו שורה היא שורת הכותרות?</div>
+      <div className="section-title">צעד 1 - איזו שורה בטבלה למטה היא שורת הכותרות?</div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: -6 }}>
+        זו השורה שבה כתובים שמות העמודות (למשל "תאריך", "תיאור", "סכום") - לרוב לא השורה הראשונה בקובץ. סמנו אותה
+        עם העיגול שליד מספר השורה המתאימה.
+      </p>
       <div className="card" style={{ overflowX: 'auto', maxHeight: 260, overflowY: 'auto' }}>
         <table className="data-table">
           <tbody>
@@ -370,7 +386,11 @@ function MappingStep({
         </table>
       </div>
 
-      <div className="section-title">מה יש בכל עמודה?</div>
+      <div className="section-title">צעד 2 - מה יש בכל עמודה?</div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: -6 }}>
+        מתחת לכל עמודה יש כמה שורות לדוגמה מהקובץ, כדי שיהיה קל לזהות מה היא. בחרו מהתפריט מעל כל עמודה אם היא
+        "תאריך", "תיאור", "סכום", או שאפשר להתעלם ממנה. חובה לבחור לפחות עמודת תאריך ועמודת סכום.
+      </p>
       <div className="card" style={{ overflowX: 'auto' }}>
         <table className="data-table">
           <thead>
@@ -415,7 +435,8 @@ function MappingStep({
   )
 }
 
-function ReviewStep({ draftRows, updateDraft, categories, people, includedCount, includedTotal, onBack, onConfirm }) {
+function ReviewStep({ draftRows, updateDraft, setAllIncluded, categories, people, includedCount, includedTotal, onBack, onConfirm }) {
+  const allSelected = draftRows.length > 0 && includedCount === draftRows.length
   return (
     <div>
       <div className="card" style={{ marginBottom: 16 }}>
@@ -426,11 +447,22 @@ function ReviewStep({ draftRows, updateDraft, categories, people, includedCount,
         </p>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <button className="btn" onClick={() => setAllIncluded(true)}>
+          סימון הכל
+        </button>
+        <button className="btn" onClick={() => setAllIncluded(false)}>
+          ביטול סימון הכל
+        </button>
+      </div>
+
       <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
         <table className="data-table">
           <thead>
             <tr>
-              <th></th>
+              <th>
+                <input type="checkbox" checked={allSelected} onChange={(e) => setAllIncluded(e.target.checked)} />
+              </th>
               <th>תאריך</th>
               <th>תיאור מקורי</th>
               <th>סוג</th>
