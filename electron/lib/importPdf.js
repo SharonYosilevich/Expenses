@@ -26,7 +26,29 @@ const BOILERPLATE_PATTERNS = [
   /^זכות\s*$/,
   /^חובה\s*$/,
   /^יתרה\s*$/,
-  /העברה מדף קודם/
+  /העברה מדף קודם/,
+  // Credit-card statement page furniture + disclaimer block
+  /^כרטיסי אשראי$/,
+  /סה"כ לחיוב קרוב/,
+  /^פירוט עסקאות בכרטיס/,
+  /עבור עסקאות שבוצעו בכרטיסים שלא הונפקו/,
+  /עסקאות לחיוב הקודם/,
+  /^סה"כ חיוב:/,
+  /^הודעה$/,
+  /המידע באחריות חברת כרטיסי האשראי/,
+  /בכל סתירה בין הרשום/,
+  /יתכן שישנן רכישות שעדיין לא דווחו/,
+  /עסקאות אחרונות הינן עסקאות שבוצעו/,
+  /עסקאות שבוצעו וטרם נקלטו/,
+  /עסקאות אלו משפיעות על יתרת המסגרת/,
+  /לא כל תנועות האישור בכרטיס מוצגות/,
+  /לא יופיעו תנועות אישור שנלקחו בכרטיס/,
+  /בשאילתה זו מפורטות גם עסקאות/,
+  /עסקאות במטבע זר שמועד החיוב/,
+  /סכום החיוב הקרוב אינו סופי/,
+  /לצפייה במידע נוסף אודות כרטיסי האשראי/,
+  /קישור מידע מאתר/,
+  /יפתח בחלון נפרד/
 ]
 
 function isBoilerplate(text) {
@@ -138,6 +160,60 @@ function splitMergedTrailingDateColumn(rows) {
   })
 }
 
+const CARD_MARKER_RE = /^(מזהה כרטיס|Apple Pay|\d{3,6})$/i
+const PLAIN_DATE_RE = /^\d{2}\/\d{2}\/\d{4}$/
+
+/**
+ * Long merchant names sometimes wrap onto their own visual line above the
+ * actual date+amount line (e.g. "פז YELLOW -גשר" / "הארי" / then the real
+ * data line), and card-metadata sub-lines ("מזהה כרטיס 6955", "Apple Pay")
+ * sit between them too. Finds the (now-clean, thanks to the date split
+ * above) date column, drops metadata marker lines entirely, and folds any
+ * description-only line with no date into the *next* row that has one.
+ */
+function mergeOrphanDescriptionLines(rows) {
+  const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 0)
+  let dateCol = -1
+  for (let c = 0; c < maxCols; c++) {
+    const values = rows.map((r) => (r[c] || '').trim()).filter(Boolean)
+    if (values.length < 3) continue
+    const matchCount = values.filter((v) => PLAIN_DATE_RE.test(v)).length
+    if (matchCount / values.length >= 0.5) {
+      dateCol = c
+      break
+    }
+  }
+  if (dateCol <= 0) return rows
+  const descCol = dateCol - 1
+
+  const merged = []
+  let pendingPrefix = ''
+  for (const row of rows) {
+    const nonEmpty = row.map((c) => (c || '').trim()).filter(Boolean)
+    if (nonEmpty.length > 0 && nonEmpty.every((c) => CARD_MARKER_RE.test(c))) {
+      continue // card-id / "Apple Pay" sub-line - metadata noise, not merchant text
+    }
+
+    const hasDate = !!(row[dateCol] || '').trim()
+    const onlyDescHasContent = nonEmpty.length > 0 && row.every((c, i) => i === descCol || !(c || '').trim())
+
+    if (!hasDate && onlyDescHasContent) {
+      pendingPrefix = pendingPrefix ? `${pendingPrefix} ${row[descCol].trim()}` : row[descCol].trim()
+      continue
+    }
+
+    if (pendingPrefix) {
+      const next = [...row]
+      next[descCol] = next[descCol] ? `${pendingPrefix} ${next[descCol]}` : pendingPrefix
+      merged.push(next)
+      pendingPrefix = ''
+    } else {
+      merged.push(row)
+    }
+  }
+  return merged
+}
+
 /**
  * Parses a PDF buffer (Hebrew bank/credit-card statement style) into raw
  * 2D rows, best-effort. Boilerplate lines (interest terms, branch headers,
@@ -151,9 +227,10 @@ async function parsePdfBuffer(buffer) {
   const uint8 = new Uint8Array(buffer)
   const doc = await pdfjsLib.getDocument({ data: uint8 }).promise
 
-  const allRows = []
-  let maxCols = 0
-
+  // Column boundaries are computed once from every page's lines combined -
+  // not per page - otherwise page 2 can end up with different column
+  // semantics than page 1 (same PDF, but transactions silently misaligned).
+  const allLines = []
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
     const page = await doc.getPage(pageNum)
     const content = await page.getTextContent()
@@ -165,27 +242,28 @@ async function parsePdfBuffer(buffer) {
         y: it.transform[5]
       }))
 
-    const lines = itemsToRows(items)
-    const boundaries = clusterColumns(lines)
-    maxCols = Math.max(maxCols, boundaries.length)
-
-    for (const line of lines) {
+    for (const line of itemsToRows(items)) {
       const lineText = line.items.map((it) => it.text).join(' ')
-      if (isBoilerplate(lineText)) continue
+      if (!isBoilerplate(lineText)) allLines.push(line)
+    }
+  }
 
-      const cols = new Array(boundaries.length).fill('')
-      for (const it of line.items) {
-        const colIdx = assignToColumn(it.x, boundaries)
-        cols[colIdx] = cols[colIdx] ? `${cols[colIdx]} ${it.text}` : it.text
-      }
-      if (cols.some((c) => c.trim() !== '')) {
-        allRows.push(cols)
-      }
+  const boundaries = clusterColumns(allLines)
+  const allRows = []
+  for (const line of allLines) {
+    const cols = new Array(boundaries.length).fill('')
+    for (const it of line.items) {
+      const colIdx = assignToColumn(it.x, boundaries)
+      cols[colIdx] = cols[colIdx] ? `${cols[colIdx]} ${it.text}` : it.text
+    }
+    if (cols.some((c) => c.trim() !== '')) {
+      allRows.push(cols)
     }
   }
 
   const fixedRows = allRows.map((row) => row.map(fixReversedDecimal))
-  const normalizedRows = splitMergedTrailingDateColumn(fixedRows)
+  const splitRows = splitMergedTrailingDateColumn(fixedRows)
+  const normalizedRows = mergeOrphanDescriptionLines(splitRows)
 
   return {
     sheets: [
@@ -198,4 +276,10 @@ async function parsePdfBuffer(buffer) {
   }
 }
 
-module.exports = { parsePdfBuffer, isBoilerplate, splitMergedTrailingDateColumn, fixReversedDecimal }
+module.exports = {
+  parsePdfBuffer,
+  isBoilerplate,
+  splitMergedTrailingDateColumn,
+  fixReversedDecimal,
+  mergeOrphanDescriptionLines
+}
