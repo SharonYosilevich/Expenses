@@ -41,26 +41,28 @@ describe('splitMergedTrailingDateColumn', () => {
 })
 
 describe('mergeOrphanDescriptionLines', () => {
-  it('folds a merchant name wrapped across two lines, and drops card-metadata noise', () => {
-    // Mirrors real extraction: cols = [_, desc, date, amount]. Needs enough
-    // ordinary rows for the date-column detection to trust that column.
+  it('folds a wrapped merchant name forward and drops card-metadata noise, even when the description column shifts between rows', () => {
+    // Real PDFs don't always put the merchant name in the same column
+    // index - a slightly longer name can land one bin over. Row shape here
+    // is [_, descA, descB, date, amount]; most rows use descA, one uses
+    // descB - the collapse should handle both without losing text.
     const rows = [
-      ['', 'בית עסק תאריך עסקה', '', 'סכום העסקה'],
-      ['', 'סטופמרקט יהלום', '07/08/2026', '281.89 ₪'],
-      ['', '', 'מזהה כרטיס', '6955'],
-      ['', 'Apple Pay', '', ''],
-      ["", "ג'מס הרצליה", '03/08/2026', '181.00 ₪'],
-      ['', '', 'מזהה כרטיס', '6955'],
-      ['', 'Apple Pay', '', ''],
-      ['', 'YELLOW -גשר', '', ''], // orphan line 1 - no date
-      ['', 'הארי', '', ''], // orphan line 2 - no date
-      ['', '', 'מזהה כרטיס', '6955'],
-      ['', '', '18/07/2026', '10.00 ₪'], // the real data line - description empty here
-      ['', 'Apple Pay', '', '']
+      ['', 'בית עסק', '', 'תאריך עסקה', 'סכום העסקה'],
+      ['', 'סטופמרקט יהלום', '', '07/08/2026', '281.89 ₪'],
+      ['', '', 'APPLE.COM/BILL', '06/08/2026', '3.90 ₪'], // lands in descB, not descA
+      ['', '', 'מזהה כרטיס', '', '6955'],
+      ['', 'Apple Pay', '', '', ''],
+      ['', 'YELLOW -גשר', '', '', ''], // orphan line 1 - no date, in descA
+      ['', '', 'הארי', '', ''], // orphan line 2 - no date, in descB this time
+      ['', '', 'מזהה כרטיס', '', '6955'],
+      ['', '', '', '18/07/2026', '10.00 ₪'], // the real data line - description blank
+      ['', 'Apple Pay', '', '', '']
     ]
     const result = mergeOrphanDescriptionLines(rows)
-    const dataRow = result.find((r) => r[2] === '18/07/2026')
-    expect(dataRow[1]).toBe('YELLOW -גשר הארי')
+    const dataRow = result.find((r) => r[1] === '18/07/2026')
+    expect(dataRow[0]).toBe('YELLOW -גשר הארי')
+    const appleBillRow = result.find((r) => r[1] === '06/08/2026')
+    expect(appleBillRow[0]).toBe('APPLE.COM/BILL')
     // marker-only rows should be gone entirely
     expect(result.some((r) => r.includes('מזהה כרטיס'))).toBe(false)
     expect(result.some((r) => r.includes('Apple Pay'))).toBe(false)

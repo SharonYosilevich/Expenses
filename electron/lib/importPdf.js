@@ -166,52 +166,93 @@ const CARD_MARKER_RE = /^(מזהה כרטיס|Apple Pay|\d{3,6})$/i
 const PLAIN_DATE_RE = /^\d{2}\/\d{2}\/\d{4}$/
 
 /**
- * Long merchant names sometimes wrap onto their own visual line above the
- * actual date+amount line (e.g. "פז YELLOW -גשר" / "הארי" / then the real
- * data line), and card-metadata sub-lines ("מזהה כרטיס 6955", "Apple Pay")
- * sit between them too. Finds the (now-clean, thanks to the date split
- * above) date column, drops metadata marker lines entirely, and folds any
- * description-only line with no date into the *next* row that has one.
+ * Finds the column where most non-empty values are a clean DD/MM/YYYY date.
+ * Returns -1 if no column looks confidently like a date column.
  */
-function mergeOrphanDescriptionLines(rows) {
+function findDateColumn(rows) {
   const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 0)
-  let dateCol = -1
   for (let c = 0; c < maxCols; c++) {
     const values = rows.map((r) => (r[c] || '').trim()).filter(Boolean)
     if (values.length < 3) continue
     const matchCount = values.filter((v) => PLAIN_DATE_RE.test(v)).length
-    if (matchCount / values.length >= 0.5) {
-      dateCol = c
-      break
-    }
+    if (matchCount / values.length >= 0.5) return c
   }
+  return -1
+}
+
+/**
+ * Merchant-name text doesn't always land in the same column index across
+ * rows - a slightly longer/shorter name can shift it into the neighboring
+ * bin during column clustering. Rather than trust one fixed "description
+ * column" index, collapse *every* column before the date column into one,
+ * concatenating whatever text each row actually has there. Row shape
+ * becomes [description, date, ...everything from after the date column].
+ */
+function collapsePreDateColumns(rows, dateCol) {
+  return rows.map((row) => {
+    const before = row.slice(0, dateCol).map((c) => (c || '').trim()).filter(Boolean)
+    const after = row.slice(dateCol + 1)
+    return [before.join(' '), (row[dateCol] || '').trim(), ...after]
+  })
+}
+
+/**
+ * Long merchant names can wrap onto their own visual line *either* above
+ * the date+amount line ("פז YELLOW -גשר" / then the data line) *or* below
+ * it (data line / then "הארי"), and card-metadata sub-lines ("מזהה כרטיס
+ * 6955", "Apple Pay") appear alongside either. Operates on the collapsed
+ * [description, date, ...] shape: drops pure-marker rows, then for each
+ * run of orphan (no-date) description lines, attaches it to the following
+ * dated row if there is one, otherwise back onto the previously emitted
+ * dated row (the "wraps below" case).
+ */
+function mergeOrphanDescriptionLines(rows) {
+  const dateCol = findDateColumn(rows)
   if (dateCol <= 0) return rows
-  const descCol = dateCol - 1
+  const descCol = 0
+  const newDateCol = 1
+
+  const collapsed = collapsePreDateColumns(rows, dateCol).filter((row) => {
+    const nonEmpty = row.map((c) => (c || '').trim()).filter(Boolean)
+    return !(nonEmpty.length > 0 && nonEmpty.every((c) => CARD_MARKER_RE.test(c)))
+  })
+
+  const isOrphan = (row) =>
+    !(row[newDateCol] || '').trim() &&
+    !!(row[descCol] || '').trim() &&
+    // Marker noise can sit in the *same* row as orphan description text,
+    // not only in its own row - tolerate it here too, not just empty cells.
+    row.every((c, i) => i === descCol || !(c || '').trim() || CARD_MARKER_RE.test((c || '').trim()))
 
   const merged = []
-  let pendingPrefix = ''
-  for (const row of rows) {
-    const nonEmpty = row.map((c) => (c || '').trim()).filter(Boolean)
-    if (nonEmpty.length > 0 && nonEmpty.every((c) => CARD_MARKER_RE.test(c))) {
-      continue // card-id / "Apple Pay" sub-line - metadata noise, not merchant text
-    }
-
-    const hasDate = !!(row[dateCol] || '').trim()
-    const onlyDescHasContent = nonEmpty.length > 0 && row.every((c, i) => i === descCol || !(c || '').trim())
-
-    if (!hasDate && onlyDescHasContent) {
-      pendingPrefix = pendingPrefix ? `${pendingPrefix} ${row[descCol].trim()}` : row[descCol].trim()
+  let i = 0
+  while (i < collapsed.length) {
+    if (!isOrphan(collapsed[i])) {
+      merged.push(collapsed[i])
+      i++
       continue
     }
 
-    if (pendingPrefix) {
-      const next = [...row]
-      next[descCol] = next[descCol] ? `${pendingPrefix} ${next[descCol]}` : pendingPrefix
-      merged.push(next)
-      pendingPrefix = ''
-    } else {
-      merged.push(row)
+    let prefix = collapsed[i][descCol].trim()
+    let j = i + 1
+    while (j < collapsed.length && isOrphan(collapsed[j])) {
+      prefix += ' ' + collapsed[j][descCol].trim()
+      j++
     }
+
+    const nextRow = collapsed[j]
+    if (nextRow && !!(nextRow[newDateCol] || '').trim()) {
+      // A dated row follows - the common case (name wraps above its data).
+      const patched = [...nextRow]
+      patched[descCol] = patched[descCol] ? `${prefix} ${patched[descCol]}` : prefix
+      collapsed[j] = patched
+    } else if (merged.length > 0) {
+      // No dated row follows - fold onto the row already emitted (the name
+      // wraps below its data, or trails off before a footer/EOF).
+      const prev = merged[merged.length - 1]
+      prev[descCol] = prev[descCol] ? `${prev[descCol]} ${prefix}` : prefix
+    }
+    i = j
   }
   return merged
 }
