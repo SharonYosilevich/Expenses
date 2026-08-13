@@ -211,6 +211,9 @@ function mergeOrphanDescriptionLines(rows) {
   if (dateCol <= 0) return rows
   const descCol = 0
   const newDateCol = 1
+  // Must be an actual DD/MM/YYYY value - a loose "non-empty" check here
+  // matches the header row's own "תאריך עסקה" column *label* text too.
+  const hasCleanDate = (row) => PLAIN_DATE_RE.test((row[newDateCol] || '').trim())
 
   const collapsed = collapsePreDateColumns(rows, dateCol).filter((row) => {
     const nonEmpty = row.map((c) => (c || '').trim()).filter(Boolean)
@@ -218,7 +221,7 @@ function mergeOrphanDescriptionLines(rows) {
   })
 
   const isOrphan = (row) =>
-    !(row[newDateCol] || '').trim() &&
+    !hasCleanDate(row) &&
     !!(row[descCol] || '').trim() &&
     // Marker noise can sit in the *same* row as orphan description text,
     // not only in its own row - tolerate it here too, not just empty cells.
@@ -241,7 +244,7 @@ function mergeOrphanDescriptionLines(rows) {
     }
 
     const nextRow = collapsed[j]
-    if (nextRow && !!(nextRow[newDateCol] || '').trim()) {
+    if (nextRow && hasCleanDate(nextRow)) {
       // A dated row follows - the common case (name wraps above its data).
       const patched = [...nextRow]
       patched[descCol] = patched[descCol] ? `${prefix} ${patched[descCol]}` : prefix
