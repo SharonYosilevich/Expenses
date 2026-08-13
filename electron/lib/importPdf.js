@@ -1,3 +1,5 @@
+const { guessHeaderRowIndex } = require('./importExcel.js')
+
 const BOILERPLATE_PATTERNS = [
   /מסגרת אשראי כוללת/,
   /תנאי הריבית/,
@@ -270,7 +272,7 @@ async function parsePdfBuffer(buffer) {
       {
         name: 'PDF',
         rows: normalizedRows,
-        suggestedHeaderRowIndex: 0
+        suggestedHeaderRowIndex: guessHeaderRowIndex(normalizedRows)
       }
     ]
   }

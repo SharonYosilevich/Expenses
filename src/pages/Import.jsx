@@ -40,8 +40,7 @@ export default function Import({ onDone }) {
       setFileInfo(parsed)
       setSheetIndex(0)
       const sheet = parsed.sheets[0]
-      const guessedHeader = sheet.suggestedHeaderRowIndex ?? 0
-      setHeaderRowIndex(parsed.kind === 'pdf' ? -1 : guessedHeader)
+      setHeaderRowIndex(sheet.suggestedHeaderRowIndex ?? 0)
       setColumnRoles(new Array(columnCount(sheet)).fill('ignore'))
       setStep('map')
     } catch (e) {

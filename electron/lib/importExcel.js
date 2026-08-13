@@ -12,6 +12,8 @@ function cellToString(v) {
   return String(v).trim()
 }
 
+const NUMERIC_LIKE_RE = /^[\d.,/\-₪\s]+$/
+
 function guessHeaderRowIndex(rows) {
   const keywords = ['תאריך', 'תיאור', 'סכום', 'זכות', 'חובה', 'יתרה', 'עסק', 'קטגוריה']
   let bestIdx = 0
@@ -23,10 +25,15 @@ function guessHeaderRowIndex(rows) {
     const nonEmpty = row.filter((c) => cellToString(c) !== '')
     if (nonEmpty.length < 2) continue
     let score = nonEmpty.length
+    let numericCount = 0
     for (const c of nonEmpty) {
       const s = cellToString(c)
       if (keywords.some((k) => s.includes(k))) score += 5
+      if (NUMERIC_LIKE_RE.test(s)) numericCount++
     }
+    // A header row is text (column names), not data - transaction rows are
+    // mostly dates/amounts, so heavily numeric rows are probably not it.
+    score -= numericCount * 2
     if (score > bestScore) {
       bestScore = score
       bestIdx = i
