@@ -17,6 +17,7 @@ export function DataProvider({ children }) {
   const [transactions, setTransactions] = useState([])
   const [settings, setSettings] = useState({ categories: [], people: [], rules: [], importMappings: {} })
   const [loading, setLoading] = useState(true)
+  const [clearVersion, setClearVersion] = useState(0)
 
   useEffect(() => {
     window.api.loadData().then((data) => {
@@ -78,19 +79,57 @@ export function DataProvider({ children }) {
     setSettings(data.settings || {})
   }, [])
 
+  const clearTransactions = useCallback(() => {
+    persistTransactions([])
+    setClearVersion((v) => v + 1)
+  }, [persistTransactions])
+
+  const deleteTransactionsByMonth = useCallback(
+    (months) => {
+      const monthSet = new Set(months)
+      persistTransactions(transactions.filter((t) => !monthSet.has(t.month)))
+      setClearVersion((v) => v + 1)
+    },
+    [transactions, persistTransactions]
+  )
+
+  const deleteTransactionsByMonthAndFile = useCallback(
+    (month, fileType) => {
+      function guessFileType(t) {
+        if (t.sourceFileType) return t.sourceFileType
+        const f = t.sourceFile || ''
+        if (f.includes('1029')) return 'card-1029'
+        if (f.includes('5825')) return 'card-5825'
+        return 'bank'
+      }
+      persistTransactions(
+        transactions.filter((t) => {
+          if (t.month !== month) return true
+          return guessFileType(t) !== fileType
+        })
+      )
+      setClearVersion((v) => v + 1)
+    },
+    [transactions, persistTransactions]
+  )
+
   const value = useMemo(
     () => ({
       transactions,
       settings,
       loading,
+      clearVersion,
       addTransactions,
       updateTransaction,
       deleteTransaction,
       updateSettings,
       categoryColorVar,
-      reloadFromBackup
+      reloadFromBackup,
+      clearTransactions,
+      deleteTransactionsByMonth,
+      deleteTransactionsByMonthAndFile
     }),
-    [transactions, settings, loading, addTransactions, updateTransaction, deleteTransaction, updateSettings, categoryColorVar, reloadFromBackup]
+    [transactions, settings, loading, clearVersion, addTransactions, updateTransaction, deleteTransaction, updateSettings, categoryColorVar, reloadFromBackup, clearTransactions, deleteTransactionsByMonth, deleteTransactionsByMonthAndFile]
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

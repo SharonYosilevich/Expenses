@@ -15,6 +15,7 @@ export default function ChartsPage() {
   const months = useMemo(() => sortedMonths(transactions), [transactions])
   const [month, setMonth] = useState('')
   const [person, setPerson] = useState('הכל')
+  const [drillCategory, setDrillCategory] = useState(null)
   const palette = usePalette()
   const categories = settings.categories || []
 
@@ -30,6 +31,20 @@ export default function ChartsPage() {
     .map((cat) => ({ name: cat, value: summary.categoryTotals[cat] || 0 }))
     .filter((d) => d.value > 0)
   if (summary.otherTotal > 0) pieData.push({ name: 'אחר', value: summary.otherTotal })
+
+  const drillRows = useMemo(() => {
+    if (!drillCategory) return []
+    const known = new Set(categories)
+    return filtered
+      .filter((t) => {
+        if (t.type !== 'expense') return false
+        if (drillCategory === 'אחר') return !known.has(t.category)
+        return t.category === drillCategory
+      })
+      .sort((a, b) => b.amount - a.amount)
+  }, [drillCategory, filtered, categories])
+
+  function openDrill(name) { setDrillCategory(name) }
 
   const barData = [...pieData].sort((a, b) => b.value - a.value)
 
@@ -78,6 +93,8 @@ export default function ChartsPage() {
                     paddingAngle={2}
                     stroke="var(--surface-1)"
                     strokeWidth={2}
+                    onClick={(d) => openDrill(d.name)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {pieData.map((d) => (
                       <Cell key={d.name} fill={colorForCategory(d.name, categories, palette)} />
@@ -103,7 +120,7 @@ export default function ChartsPage() {
                   <XAxis type="number" stroke="var(--text-muted)" fontSize={12} />
                   <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} width={70} />
                   <Tooltip formatter={(v) => formatMoney(v)} contentStyle={tooltipStyle} />
-                  <Bar dataKey="value" radius={[4, 4, 4, 4]} maxBarSize={22}>
+                  <Bar dataKey="value" radius={[4, 4, 4, 4]} maxBarSize={22} onClick={(d) => openDrill(d.name)} style={{ cursor: 'pointer' }}>
                     {barData.map((d) => (
                       <Cell key={d.name} fill={colorForCategory(d.name, categories, palette)} />
                     ))}
@@ -114,6 +131,51 @@ export default function ChartsPage() {
           </div>
         </div>
       </div>
+
+      {drillCategory && (
+        <div style={modalOverlayStyle} onClick={() => setDrillCategory(null)}>
+          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                {drillCategory} — {formatMonth(activeMonth)}
+              </div>
+              <button className="btn" style={{ fontSize: 13, padding: '4px 10px' }} onClick={() => setDrillCategory(null)}>✕ סגור</button>
+            </div>
+            {drillRows.length === 0 ? (
+              <div className="empty-state">אין תנועות</div>
+            ) : (
+              <table className="data-table" style={{ width: '100%' }}>
+                <thead>
+                  <tr>
+                    <th>תאריך</th>
+                    <th>תיאור</th>
+                    <th>עבור מי</th>
+                    <th>קבוע?</th>
+                    <th>סכום</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drillRows.map((t) => (
+                    <tr key={t.id}>
+                      <td style={{ fontSize: 13 }}>{t.date}</td>
+                      <td style={{ fontSize: 13 }}>{t.note || t.sourceDescription || ''}</td>
+                      <td style={{ fontSize: 13 }}>{t.person}</td>
+                      <td style={{ fontSize: 13 }}>{t.isFixed ? 'כן' : ''}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--series-2)' }}>{formatMoney(t.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="total-row">
+                    <td colSpan={4}>סה"כ</td>
+                    <td>{formatMoney(drillRows.reduce((s, t) => s + t.amount, 0))}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="section-title">מגמה חודשית {person !== 'הכל' ? `- ${person}` : ''}</div>
       <div className="card" style={{ height: 340 }}>
@@ -139,4 +201,15 @@ const tooltipStyle = {
   border: '1px solid var(--border)',
   borderRadius: 8,
   fontSize: 13
+}
+
+const modalOverlayStyle = {
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+}
+
+const modalStyle = {
+  background: 'var(--surface-1)', borderRadius: 12, padding: 24,
+  minWidth: 480, maxWidth: 680, maxHeight: '80vh', overflowY: 'auto',
+  boxShadow: '0 8px 40px rgba(0,0,0,0.3)'
 }

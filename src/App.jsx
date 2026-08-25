@@ -6,19 +6,23 @@ import History from './pages/History.jsx'
 import Transactions from './pages/Transactions.jsx'
 import Import from './pages/Import.jsx'
 import Settings from './pages/Settings.jsx'
+import LockScreen from './pages/LockScreen.jsx'
+import Installments from './pages/Installments.jsx'
 
 const PAGES = [
   { key: 'dashboard', label: 'דשבורד חודשי', icon: '📊' },
   { key: 'charts', label: 'גרפים', icon: '📈' },
   { key: 'history', label: 'השוואת חודשים', icon: '🗓️' },
   { key: 'transactions', label: 'כל התנועות', icon: '📋' },
+  { key: 'installments', label: 'תשלומים', icon: '💳' },
   { key: 'import', label: 'ייבוא', icon: '📥' },
   { key: 'settings', label: 'הגדרות', icon: '⚙️' }
 ]
 
 export default function App() {
-  const { loading } = useData()
+  const { loading, settings } = useData()
   const [page, setPage] = useState('dashboard')
+  const [unlocked, setUnlocked] = useState(false)
 
   if (loading) {
     return (
@@ -26,6 +30,10 @@ export default function App() {
         טוען נתונים...
       </div>
     )
+  }
+
+  if (settings.pinHash && !unlocked) {
+    return <LockScreen pinHash={settings.pinHash} recoveryCodeHash={settings.recoveryCodeHash} onUnlock={() => setUnlocked(true)} />
   }
 
   return (
@@ -42,10 +50,18 @@ export default function App() {
             <span>{p.label}</span>
           </button>
         ))}
+        {settings.pinHash && (
+          <button
+            className="nav-item"
+            style={{ marginTop: 'auto', color: 'var(--text-muted)', fontSize: '0.8rem' }}
+            onClick={() => setUnlocked(false)}
+          >
+            <span>🔒</span>
+            <span>נעילה</span>
+          </button>
+        )}
       </aside>
       <main className="main">
-        {/* Every page stays mounted and is only hidden via CSS - switching tabs
-            must never wipe in-progress work (e.g. mid-review import state). */}
         <div style={{ display: page === 'dashboard' ? 'block' : 'none' }}>
           <Dashboard />
         </div>
@@ -57,6 +73,9 @@ export default function App() {
         </div>
         <div style={{ display: page === 'transactions' ? 'block' : 'none' }}>
           <Transactions />
+        </div>
+        <div style={{ display: page === 'installments' ? 'block' : 'none' }}>
+          <Installments />
         </div>
         <div style={{ display: page === 'import' ? 'block' : 'none' }}>
           <Import onDone={() => setPage('transactions')} />

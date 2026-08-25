@@ -47,15 +47,27 @@ export function incomeSummary(transactions) {
 }
 
 export function monthSummary(transactions, categories) {
-  const { totals, otherTotal, grandTotal } = categoryTotals(transactions, categories)
+  const { totals: varTotals, otherTotal: varOtherTotal, grandTotal: variableTotal } = categoryTotals(transactions, categories)
   const { total: fixedTotal, items: fixedItems } = fixedExpenses(transactions)
   const { total: incomeTotal, items: incomeItems } = incomeSummary(transactions)
-  const expenseTotal = round2(grandTotal + fixedTotal)
+
+  // All expenses (variable + fixed) per category — for the category breakdown table
+  const allExpenses = transactions.filter((t) => t.type === 'expense')
+  const allTotals = {}
+  for (const cat of categories) {
+    allTotals[cat] = sumAmount(allExpenses.filter((t) => t.category === cat))
+  }
+  const known = new Set(categories)
+  const allOtherTotal = sumAmount(allExpenses.filter((t) => !known.has(t.category)))
+
+  const expenseTotal = round2(variableTotal + fixedTotal)
   const remaining = round2(incomeTotal - expenseTotal)
   return {
-    categoryTotals: totals,
-    otherTotal,
-    variableTotal: grandTotal,
+    categoryTotals: allTotals,
+    otherTotal: allOtherTotal,
+    varCategoryTotals: varTotals,
+    varOtherTotal,
+    variableTotal,
     fixedTotal,
     fixedItems,
     incomeTotal,

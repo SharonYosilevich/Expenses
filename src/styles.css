@@ -430,3 +430,45 @@ tr.total-row td {
   color: var(--success);
   border-color: var(--success);
 }
+
+/* ── Budget progress bar ── */
+.budget-track {
+  position: relative;
+  height: 10px;
+  background: var(--gridline);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.budget-avg-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ── Anomaly alert card ── */
+.anomaly-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(208, 59, 59, 0.07);
+  border: 1px solid rgba(208, 59, 59, 0.25);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 0.875rem;
+}
+
+.anomaly-cat {
+  font-weight: 700;
+  min-width: 90px;
+  color: var(--critical);
+}
