@@ -100,7 +100,13 @@ export default function ChartsPage() {
                       <Cell key={d.name} fill={colorForCategory(d.name, categories, palette)} />
                     ))}
                   </Pie>
-                  <Legend />
+                  <Legend
+                    onClick={(data) => openDrill(data.value)}
+                    wrapperStyle={{ cursor: 'pointer' }}
+                    formatter={(value) => (
+                      <span style={{ fontSize: 12, color: 'var(--text-primary)', cursor: 'pointer' }}>{value}</span>
+                    )}
+                  />
                   <Tooltip formatter={(v) => formatMoney(v)} contentStyle={tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
