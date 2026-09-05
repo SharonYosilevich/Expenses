@@ -284,13 +284,13 @@ export default function Transactions() {
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ width: 36, textAlign: 'center' }}>
+              <th style={{ width: 44, textAlign: 'center', cursor: 'pointer' }} onClick={toggleAll} title="בחר הכל">
                 <input
                   type="checkbox"
                   checked={allSelected}
                   onChange={toggleAll}
-                  title="בחר הכל"
-                  style={{ cursor: 'pointer' }}
+                  style={checkboxStyle}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </th>
               <th onClick={() => toggleSort('date')} style={{ cursor: 'pointer' }}>
@@ -314,12 +314,16 @@ export default function Transactions() {
               const isSelected = selected.has(t.id)
               return (
                 <tr key={t.id} style={{ background: isSelected ? 'rgba(42,120,214,0.10)' : dirty ? 'rgba(42,120,214,0.06)' : undefined }}>
-                  <td style={{ textAlign: 'center' }}>
+                  <td
+                    style={{ textAlign: 'center', cursor: 'pointer', padding: '4px 2px' }}
+                    onClick={() => toggleRow(t.id)}
+                  >
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleRow(t.id)}
-                      style={{ cursor: 'pointer' }}
+                      style={checkboxStyle}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </td>
                   <td>
@@ -469,6 +473,15 @@ const lblStyle = {
   fontSize: 12,
   color: 'var(--text-muted)',
   marginBottom: 4
+}
+
+const checkboxStyle = {
+  width: 18,
+  height: 18,
+  cursor: 'pointer',
+  accentColor: 'var(--accent)',
+  display: 'block',
+  margin: '0 auto'
 }
 
 const bulkBarStyle = {
