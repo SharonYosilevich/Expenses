@@ -124,7 +124,7 @@ export default function ChartsPage() {
                 <BarChart data={barData} layout="vertical" margin={{ right: 20 }}>
                   <CartesianGrid horizontal={false} stroke="var(--gridline)" />
                   <XAxis type="number" stroke="var(--text-muted)" fontSize={12} />
-                  <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} width={70} />
+                  <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} width={110} tick={{ textAnchor: 'end', direction: 'rtl' }} />
                   <Tooltip formatter={(v) => formatMoney(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="value" radius={[4, 4, 4, 4]} maxBarSize={22} onClick={(d) => openDrill(d.name)} style={{ cursor: 'pointer' }}>
                     {barData.map((d) => (
