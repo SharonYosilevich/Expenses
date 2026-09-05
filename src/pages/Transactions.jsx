@@ -242,7 +242,7 @@ export default function Transactions() {
               <th>קטגוריה</th>
               <th>עבור מי</th>
               <th>קבוע?</th>
-              <th title="הוצאה שמומנה מחסכונות — לא תיכלל בתקציב החודשי">💰</th>
+
               <th onClick={() => toggleSort('amount')} style={{ cursor: 'pointer' }}>
                 סכום {sortKey === 'amount' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
               </th>
@@ -312,13 +312,7 @@ export default function Transactions() {
                       onChange={(e) => setEdit(t.id, { isFixed: e.target.checked })}
                     />
                   </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button
-                      onClick={() => toggleFromSavings(t)}
-                      title={t.fromSavings ? 'מחסכונות — לחץ לביטול' : 'לחץ לסימון כהוצאה מחסכונות'}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, opacity: t.fromSavings ? 1 : 0.18, padding: 0 }}
-                    >💰</button>
-                  </td>
+
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, direction: 'ltr' }}>
                       <span style={{ fontWeight: 700, fontSize: 13, color: getVal(t, 'type') === 'income' ? 'var(--success)' : 'var(--critical)', minWidth: 10, textAlign: 'center' }}>
