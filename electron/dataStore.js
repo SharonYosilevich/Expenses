@@ -101,6 +101,8 @@ const DEFAULT_DATA = {
       { keyword: 'הטבות פיס',        category: 'בידור',        person: 'בית', isFixed: false, type: 'expense' },
       // ── משיכת מזומן ──
       { keyword: 'משיכת מזומן',      category: 'משיכת מזומן',  person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'כספומט',           category: 'משיכת מזומן',  person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'משיכה מכספומט',    category: 'משיכת מזומן',  person: 'בית', isFixed: false, type: 'expense' },
       // ── הכנסות ──
       { keyword: 'משכורת',           category: 'משכורת',       person: 'בית', isFixed: false, type: 'income'  },
       { keyword: 'סיטיבנק',          category: 'משכורת',       person: 'בית', isFixed: false, type: 'income'  },
