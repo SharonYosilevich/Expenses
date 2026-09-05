@@ -58,6 +58,14 @@ export function DataProvider({ children }) {
     [transactions, persistTransactions]
   )
 
+  const deleteTransactions = useCallback(
+    (ids) => {
+      const idSet = new Set(ids)
+      persistTransactions(transactions.filter((t) => !idSet.has(t.id)))
+    },
+    [transactions, persistTransactions]
+  )
+
   const updateSettings = useCallback(
     (patch) => {
       persistSettings({ ...settings, ...patch })
@@ -122,6 +130,7 @@ export function DataProvider({ children }) {
       addTransactions,
       updateTransaction,
       deleteTransaction,
+      deleteTransactions,
       updateSettings,
       categoryColorVar,
       reloadFromBackup,
@@ -129,7 +138,7 @@ export function DataProvider({ children }) {
       deleteTransactionsByMonth,
       deleteTransactionsByMonthAndFile
     }),
-    [transactions, settings, loading, clearVersion, addTransactions, updateTransaction, deleteTransaction, updateSettings, categoryColorVar, reloadFromBackup, clearTransactions, deleteTransactionsByMonth, deleteTransactionsByMonthAndFile]
+    [transactions, settings, loading, clearVersion, addTransactions, updateTransaction, deleteTransaction, deleteTransactions, updateSettings, categoryColorVar, reloadFromBackup, clearTransactions, deleteTransactionsByMonth, deleteTransactionsByMonthAndFile]
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

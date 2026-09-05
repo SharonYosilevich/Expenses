@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { useData } from '../DataContext.jsx'
 import { monthOf, sortedMonths } from '../lib/aggregate.js'
@@ -9,7 +9,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 const currentMonth = () => today().slice(0, 7)
 
 export default function Transactions() {
-  const { transactions, settings, updateTransaction, deleteTransaction, addTransactions } = useData()
+  const { transactions, settings, updateTransaction, deleteTransaction, deleteTransactions, addTransactions } = useData()
   const months = useMemo(() => sortedMonths(transactions), [transactions])
   const [month, setMonth] = useState('הכל')
   const [person, setPerson] = useState('הכל')
@@ -19,6 +19,7 @@ export default function Transactions() {
   const [sortDir, setSortDir] = useState('desc')
   const [showAddForm, setShowAddForm] = useState(false)
   const [edits, setEdits] = useState({}) // { [id]: { field: value, ... } }
+  const [selected, setSelected] = useState(new Set()) // selected row IDs
   const [form, setForm] = useState(() => ({
     date: today(),
     month: currentMonth(),
@@ -95,6 +96,56 @@ export default function Transactions() {
       return next
     })
   }
+
+  // ── Bulk selection helpers ──
+  const allVisibleIds = useMemo(() => rows.map((r) => r.id), [rows])
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selected.has(id))
+  const someSelected = selected.size > 0
+
+  function toggleRow(id) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev)
+        allVisibleIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      setSelected((prev) => new Set([...prev, ...allVisibleIds]))
+    }
+  }
+
+  function clearSelection() { setSelected(new Set()) }
+
+  function saveSelected() {
+    const ids = [...selected].filter((id) => edits[id])
+    ids.forEach((id) => {
+      updateTransaction(id, edits[id])
+    })
+    setEdits((prev) => {
+      const next = { ...prev }
+      ids.forEach((id) => delete next[id])
+      return next
+    })
+    clearSelection()
+  }
+
+  function deleteSelected() {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    if (!window.confirm(`למחוק ${ids.length} תנועות? פעולה זו אינה ניתנת לביטול.`)) return
+    deleteTransactions(ids)
+    clearSelection()
+  }
+
+  const dirtySelectedCount = [...selected].filter((id) => edits[id]).length
 
   function handleFormDate(value) {
     setForm((f) => ({ ...f, date: value, month: monthOf(value) }))
@@ -233,6 +284,15 @@ export default function Transactions() {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: 36, textAlign: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  title="בחר הכל"
+                  style={{ cursor: 'pointer' }}
+                />
+              </th>
               <th onClick={() => toggleSort('date')} style={{ cursor: 'pointer' }}>
                 תאריך {sortKey === 'date' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
               </th>
@@ -242,7 +302,6 @@ export default function Transactions() {
               <th>קטגוריה</th>
               <th>עבור מי</th>
               <th>קבוע?</th>
-
               <th onClick={() => toggleSort('amount')} style={{ cursor: 'pointer' }}>
                 סכום {sortKey === 'amount' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
               </th>
@@ -252,8 +311,17 @@ export default function Transactions() {
           <tbody>
             {rows.map((t) => {
               const dirty = isDirty(t.id)
+              const isSelected = selected.has(t.id)
               return (
-                <tr key={t.id} style={{ background: dirty ? 'rgba(42,120,214,0.06)' : undefined }}>
+                <tr key={t.id} style={{ background: isSelected ? 'rgba(42,120,214,0.10)' : dirty ? 'rgba(42,120,214,0.06)' : undefined }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRow(t.id)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </td>
                   <td>
                     <input
                       type="date"
@@ -361,6 +429,28 @@ export default function Transactions() {
         </table>
         {rows.length === 0 && <div className="empty-state">לא נמצאו תנועות</div>}
       </div>
+
+      {/* ── Floating bulk-action bar ── */}
+      {someSelected && (
+        <div style={bulkBarStyle}>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>
+            {selected.size} נבחרו
+          </span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {dirtySelectedCount > 0 && (
+              <button className="btn primary" style={{ fontSize: 13, padding: '6px 16px' }} onClick={saveSelected}>
+                שמירת שינויים ({dirtySelectedCount})
+              </button>
+            )}
+            <button className="btn danger" style={{ fontSize: 13, padding: '6px 16px' }} onClick={deleteSelected}>
+              מחיקת נבחרות ({selected.size})
+            </button>
+            <button className="btn" style={{ fontSize: 13, padding: '6px 14px' }} onClick={clearSelection}>
+              ביטול בחירה
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -379,4 +469,21 @@ const lblStyle = {
   fontSize: 12,
   color: 'var(--text-muted)',
   marginBottom: 4
+}
+
+const bulkBarStyle = {
+  position: 'fixed',
+  bottom: 28,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  background: 'var(--surface-1)',
+  border: '1px solid var(--border)',
+  borderRadius: 14,
+  boxShadow: '0 6px 32px rgba(0,0,0,0.22)',
+  padding: '10px 20px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 16,
+  zIndex: 200,
+  minWidth: 360
 }
