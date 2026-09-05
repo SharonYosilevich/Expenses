@@ -8,7 +8,7 @@ const DEFAULT_DATA = {
     categories: [
       'אישי', 'ארנונה', 'בידור', 'ביטוח לרכב', 'ביטוחים', 'הוצאות נסיעה',
       'בית', 'גנים', 'דלק', 'החזר הלוואה', 'הטבות בנק', 'העברות',
-      'חד פעמי', 'כייף', 'היי כייף', 'מזון', 'משיכת מזומן', 'משכורת', 'משכנתא',
+      'חד פעמי', 'חוג', 'כייף', 'היי כייף', 'מזון', 'משיכת מזומן', 'משכורת', 'משכנתא',
       'סופר', 'סיגריות', 'ענן', 'קופ"ח', 'קופ"ח תרופות', 'קניות',
       'קניות אינטרנט', 'קצבאות', 'תקשורת', 'AI', 'אחר'
     ],
@@ -116,9 +116,10 @@ const DEFAULT_DATA = {
       { keyword: 'עירית חדרה משכורת', category: 'משכורת',      person: 'שרון',   isFixed: false, type: 'income'  },
       { keyword: 'עיריית חדרה משכורת', category: 'משכורת',     person: 'שרון',   isFixed: false, type: 'income'  },
       { keyword: 'ביטוח לאומי',      category: 'קצבאות',       person: 'בית', isFixed: false, type: 'income'  },
-      // ── אישי ילדים ──
-      { keyword: 'מתנ"ס',            category: 'אישי',         person: 'אביתר', isFixed: false, type: 'expense' },
-      { keyword: 'רשת פנאי וקהילה',  category: 'אישי',         person: 'אביתר', isFixed: false, type: 'expense' },
+      // ── חוגים / ילדים ──
+      { keyword: 'מתנ"ס',             category: 'חוג',          person: 'אביתר', isFixed: false, type: 'expense' },
+      { keyword: 'מתנס',             category: 'חוג',          person: 'אביתר', isFixed: false, type: 'expense' },
+      { keyword: 'רשת פנאי וקהילה',  category: 'חוג',          person: 'אביתר', isFixed: false, type: 'expense' },
       // ── אישי שרון ──
       { keyword: 'All Jobs',         category: 'אישי',         person: 'שרון', isFixed: false, type: 'expense' },
     ],
