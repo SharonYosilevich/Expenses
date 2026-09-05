@@ -46,6 +46,25 @@ export default function Dashboard() {
   )
 
   const budgets = settings.budgets || {}
+  const categoryTypes = settings.categoryTypes || {}
+
+  // ── 50/30/20 ──
+  const typeBreakdown = useMemo(() => {
+    const expenses = filtered.filter((t) => t.type === 'expense' && !t.fromSavings)
+    const byType = { 'חובה': 0, 'גמיש': 0, 'מותרות': 0 }
+    for (const t of expenses) {
+      const ct = categoryTypes[t.category]
+      if (ct) byType[ct] = (byType[ct] || 0) + t.amount
+    }
+    return byType
+  }, [filtered, categoryTypes])
+
+  const savingsSpend = useMemo(
+    () => filtered.filter((t) => t.type === 'expense' && t.fromSavings).reduce((s, t) => s + t.amount, 0),
+    [filtered]
+  )
+
+  const hasTypeBreakdown = Object.values(typeBreakdown).some((v) => v > 0)
 
   if (months.length === 0) {
     return (
@@ -97,6 +116,13 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        {savingsSpend > 0 && (
+          <div className="stat-tile">
+            <div className="label">הוצאות מחסכונות</div>
+            <div className="value" style={{ fontSize: '1.1rem', color: 'var(--series-3)' }}>{formatMoney(savingsSpend)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>לא נכלל בתקציב החודשי</div>
+          </div>
+        )}
       </div>
 
       {/* ── התראות חריגה ── */}
@@ -118,38 +144,26 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* ── הוצאות לפי קטגוריה + פסי תקציב ── */}
+      {/* ── 50/30/20 ── */}
+      {hasTypeBreakdown && (
+        <>
+          <div className="section-title">חלוקת הוצאות — חובה / גמיש / מותרות</div>
+          <div className="card">
+            <BudgetRulePanel breakdown={typeBreakdown} incomeTotal={summary.incomeTotal} />
+          </div>
+        </>
+      )}
+
+      {/* ── הוצאות לפי קטגוריה ── */}
       <div className="section-title">הוצאות לפי קטגוריה</div>
-      <div className="card" style={{ overflowX: 'auto' }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              {categories.map((cat) => (
-                <th key={cat}>
-                  <span className="category-swatch" style={{ background: categoryColorVar(cat) }} />
-                  {cat}
-                </th>
-              ))}
-              {summary.otherTotal > 0 && <th>(ללא קטגוריה)</th>}
-              <th>סה"כ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {categories.map((cat) => (
-                <td
-                  key={cat}
-                  onClick={() => setOpenCategory(openCategory === cat ? null : cat)}
-                  style={{ cursor: 'pointer', fontWeight: openCategory === cat ? 700 : 400 }}
-                >
-                  {formatMoney(summary.categoryTotals[cat] || 0)}
-                </td>
-              ))}
-              {summary.otherTotal > 0 && <td>{formatMoney(summary.otherTotal)}</td>}
-              <td className="total-row">{formatMoney(summary.expenseTotal)}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div className="card">
+        <CategoryBars
+          categories={categories}
+          summary={summary}
+          openCategory={openCategory}
+          setOpenCategory={setOpenCategory}
+          categoryColorVar={categoryColorVar}
+        />
       </div>
 
       {/* ── פסי תקציב ── */}
@@ -287,6 +301,92 @@ export default function Dashboard() {
   )
 }
 
+const CATEGORY_GROUPS = {
+  'בית': ['בית', 'ארנונה', 'משכנתא'],
+  'רכב': ['דלק', 'ביטוח לרכב'],
+  'בריאות': ['קופ"ח', 'קופ"ח תרופות', 'ביטוחים'],
+}
+
+// Returns the group name for a category, or null
+function groupOf(cat) {
+  for (const [g, cats] of Object.entries(CATEGORY_GROUPS)) {
+    if (cats.includes(cat)) return g
+  }
+  return null
+}
+
+function CategoryBars({ categories, summary, openCategory, setOpenCategory, categoryColorVar }) {
+  const [showAll, setShowAll] = useState(false)
+
+  const rows = categories
+    .map((cat) => ({ cat, amount: summary.categoryTotals[cat] || 0 }))
+    .filter((r) => r.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+
+  if (summary.otherTotal > 0) rows.push({ cat: '(ללא קטגוריה)', amount: summary.otherTotal })
+
+  const max = rows[0]?.amount || 1
+  const SHOW_DEFAULT = 6
+  const visible = showAll ? rows : rows.slice(0, SHOW_DEFAULT)
+  const hiddenCount = rows.length - SHOW_DEFAULT
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 32px' }}>
+        {visible.map(({ cat, amount }) => {
+          const active = openCategory === cat
+          const group = groupOf(cat)
+          return (
+            <div
+              key={cat}
+              onClick={() => setOpenCategory(active ? null : cat)}
+              style={{ cursor: 'pointer', padding: '8px 4px', borderRadius: 6, background: active ? 'rgba(42,120,214,0.06)' : 'transparent' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: active ? 700 : 500 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 3, background: categoryColorVar(cat), flexShrink: 0, display: 'inline-block' }} />
+                  {cat}
+                  {group && <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>{group}</span>}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{formatMoney(amount)}</span>
+              </div>
+              <div style={{ height: 5, borderRadius: 4, background: 'var(--surface-2)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', borderRadius: 4, background: categoryColorVar(cat), width: (amount / max * 100) + '%', transition: 'width 0.3s' }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* total row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)', fontSize: 13 }}>
+        <span style={{ color: 'var(--text-muted)' }}>סה"כ הוצאות</span>
+        <span style={{ fontWeight: 700 }}>{formatMoney(summary.expenseTotal)}</span>
+      </div>
+
+      {/* show more / less */}
+      {hiddenCount > 0 && !showAll && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="btn"
+          style={{ marginTop: 10, fontSize: 12, padding: '4px 12px' }}
+        >
+          + הצג עוד {hiddenCount} קטגוריות
+        </button>
+      )}
+      {showAll && hiddenCount > 0 && (
+        <button
+          onClick={() => setShowAll(false)}
+          className="btn"
+          style={{ marginTop: 10, fontSize: 12, padding: '4px 12px' }}
+        >
+          הסתר ↑
+        </button>
+      )}
+    </div>
+  )
+}
+
 function FixedVsFlexItem({ label, amount, total, color }) {
   const pct = total > 0 ? Math.round((amount / total) * 100) : 0
   return (
@@ -330,6 +430,66 @@ function TransactionMiniTable({ rows, totalLabel, total }) {
         )}
       </tbody>
     </table>
+  )
+}
+
+const RULE_TARGETS  = { 'חובה': 50, 'גמיש': 30, 'מותרות': 20 }
+const RULE_COLORS   = { 'חובה': '#8b5cf6', 'גמיש': '#10b981', 'מותרות': '#3b82f6' }
+const RULE_SUBTITLES = { 'חובה': 'הכרחי — יעד 50%', 'גמיש': 'גמיש — יעד 30%', 'מותרות': 'רצוני — יעד 20%' }
+
+function BudgetRulePanel({ breakdown, incomeTotal }) {
+  const total = Object.values(breakdown).reduce((s, v) => s + v, 0)
+  const base = incomeTotal > 0 ? incomeTotal : total || 1
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {['חובה', 'גמיש', 'מותרות'].map((type) => {
+        const amount = breakdown[type] || 0
+        const pct = Math.round((amount / base) * 100)
+        const target = RULE_TARGETS[type]
+        const color = RULE_COLORS[type]
+        const diff = pct - target
+        const barPct = Math.min((amount / (base * target / 100)) * 100, 130)
+        const over = diff > 5
+        const under = diff < -10
+        return (
+          <div key={type}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 6 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: color, display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontWeight: 700 }}>{type}</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{RULE_SUBTITLES[type]}</span>
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 700 }}>{formatMoney(amount)}</span>
+                <span style={{
+                  fontSize: 11, padding: '2px 7px', borderRadius: 10,
+                  background: over ? 'rgba(239,68,68,0.12)' : under ? 'rgba(16,185,129,0.08)' : 'rgba(0,0,0,0.06)',
+                  color: over ? '#ef4444' : under ? '#10b981' : 'var(--text-muted)',
+                  fontWeight: 600
+                }}>
+                  {pct}%{over ? ' ↑' : under ? ' ↓' : ''}
+                </span>
+              </span>
+            </div>
+            <div style={{ position: 'relative', height: 8, borderRadius: 4, background: 'var(--surface-2)', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 4,
+                background: over ? '#ef4444' : color,
+                width: Math.min(barPct, 100) + '%',
+                transition: 'width 0.4s'
+              }} />
+            </div>
+            {/* target marker line at 100% of ideal */}
+          </div>
+        )
+      })}
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', paddingTop: 4, borderTop: '1px solid var(--gridline)' }}>
+        {incomeTotal > 0
+          ? 'אחוזים מחושבים מתוך ההכנסה החודשית · הוצאות מחסכונות לא נכללות'
+          : 'אין הכנסה מוזנת — אחוזים מתוך סך ההוצאות המסווגות'}
+      </div>
+    </div>
   )
 }
 

@@ -27,7 +27,8 @@ export default function Transactions() {
     type: 'expense',
     category: '',
     person: '',
-    isFixed: false
+    isFixed: false,
+    fromSavings: false
   }))
 
   const rows = useMemo(() => {
@@ -83,6 +84,10 @@ export default function Transactions() {
     })
   }
 
+  function toggleFromSavings(t) {
+    updateTransaction(t.id, { fromSavings: !t.fromSavings })
+  }
+
   function discardRow(id) {
     setEdits((prev) => {
       const next = { ...prev }
@@ -107,12 +112,13 @@ export default function Transactions() {
       person: form.person || (people[0] || ''),
       amount: amt,
       isFixed: form.isFixed,
+      fromSavings: form.fromSavings || false,
       note: form.description.trim(),
       sourceDescription: form.description.trim(),
       sourceFile: 'ידני',
       importedAt: new Date().toISOString()
     }])
-    setForm({ date: today(), month: currentMonth(), description: '', amount: '', type: 'expense', category: form.category, person: form.person, isFixed: false })
+    setForm({ date: today(), month: currentMonth(), description: '', amount: '', type: 'expense', category: form.category, person: form.person, isFixed: false, fromSavings: false })
     setShowAddForm(false)
   }
 
@@ -173,6 +179,10 @@ export default function Transactions() {
               <input type="checkbox" checked={form.isFixed} onChange={(e) => setForm((f) => ({ ...f, isFixed: e.target.checked }))} />
               <label style={{ fontSize: 13 }}>תשלום קבוע</label>
             </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, paddingBottom: 2 }}>
+              <input type="checkbox" checked={form.fromSavings} onChange={(e) => setForm((f) => ({ ...f, fromSavings: e.target.checked }))} />
+              <label style={{ fontSize: 13 }}>💰 מחסכונות</label>
+            </div>
           </div>
           <button className="btn primary" onClick={saveManual}
             disabled={!form.description.trim() || !form.amount || parseFloat(form.amount) <= 0}>
@@ -232,6 +242,7 @@ export default function Transactions() {
               <th>קטגוריה</th>
               <th>עבור מי</th>
               <th>קבוע?</th>
+              <th title="הוצאה שמומנה מחסכונות — לא תיכלל בתקציב החודשי">💰</th>
               <th onClick={() => toggleSort('amount')} style={{ cursor: 'pointer' }}>
                 סכום {sortKey === 'amount' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
               </th>
@@ -300,6 +311,13 @@ export default function Transactions() {
                       checked={!!getVal(t, 'isFixed')}
                       onChange={(e) => setEdit(t.id, { isFixed: e.target.checked })}
                     />
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleFromSavings(t)}
+                      title={t.fromSavings ? 'מחסכונות — לחץ לביטול' : 'לחץ לסימון כהוצאה מחסכונות'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, opacity: t.fromSavings ? 1 : 0.18, padding: 0 }}
+                    >💰</button>
                   </td>
                   <td>
                     <input

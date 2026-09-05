@@ -4,6 +4,9 @@ import { hashPin } from './LockScreen.jsx'
 import { sortedMonths } from '../lib/aggregate.js'
 import { formatMonth } from '../components/FilterBar.jsx'
 
+const CAT_TYPE_COLOR = { 'חובה': '#8b5cf6', 'גמיש': '#10b981', 'מותרות': '#3b82f6' }
+const CAT_TYPE_BG    = { 'חובה': 'rgba(139,92,246,0.12)', 'גמיש': 'rgba(16,185,129,0.12)', 'מותרות': 'rgba(59,130,246,0.12)' }
+
 export default function Settings() {
   const { settings, transactions, updateSettings, reloadFromBackup, clearTransactions, deleteTransactionsByMonth, deleteTransactionsByMonthAndFile } = useData()
   const [dataPath, setDataPath] = useState('')
@@ -95,6 +98,13 @@ export default function Settings() {
 
   function removeCategory(cat) {
     updateSettings({ categories: (settings.categories || []).filter((c) => c !== cat) })
+  }
+
+  function setCategoryType(cat, type) {
+    const types = { ...(settings.categoryTypes || {}) }
+    if (type === '') delete types[cat]
+    else types[cat] = type
+    updateSettings({ categoryTypes: types })
   }
 
   function addPerson() {
@@ -189,15 +199,33 @@ export default function Settings() {
                 מיין א-ב
               </button>
             </div>
-            <div className="tag-list" style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 12, maxHeight: 320, overflowY: 'auto' }}>
               {(settings.categories || [])
                 .filter((c) => !catSearch.trim() || c.includes(catSearch.trim()))
-                .map((c) => (
-                  <span className="tag" key={c}>
-                    {c}
-                    <button onClick={() => removeCategory(c)}>✕</button>
-                  </span>
-                ))}
+                .map((c) => {
+                  const ctype = (settings.categoryTypes || {})[c] || ''
+                  return (
+                    <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 2px', borderBottom: '1px solid var(--gridline)' }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>{c}</span>
+                      <div style={{ display: 'flex', gap: 3 }}>
+                        {['חובה', 'גמיש', 'מותרות'].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setCategoryType(c, ctype === t ? '' : t)}
+                            style={{
+                              fontSize: 10, padding: '2px 7px', borderRadius: 10, cursor: 'pointer',
+                              border: '1px solid ' + (ctype === t ? CAT_TYPE_COLOR[t] : 'var(--border)'),
+                              background: ctype === t ? CAT_TYPE_BG[t] : 'transparent',
+                              color: ctype === t ? CAT_TYPE_COLOR[t] : 'var(--text-muted)',
+                              fontWeight: ctype === t ? 700 : 400
+                            }}
+                          >{t}</button>
+                        ))}
+                      </div>
+                      <button onClick={() => removeCategory(c)} style={{ color: 'var(--critical)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 2px' }}>✕</button>
+                    </div>
+                  )
+                })}
               {catSearch.trim() && (settings.categories || []).filter(c => c.includes(catSearch.trim())).length === 0 && (
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>לא נמצאה קטגוריה</span>
               )}

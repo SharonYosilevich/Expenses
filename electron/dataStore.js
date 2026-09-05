@@ -109,6 +109,33 @@ const DEFAULT_DATA = {
       // ── אישי שרון ──
       { keyword: 'All Jobs',         category: 'אישי',         person: 'שרון', isFixed: false, type: 'expense' },
     ],
+    categoryTypes: {
+      'משכנתא':       'חובה',
+      'ארנונה':        'חובה',
+      'בית':           'חובה',
+      'ביטוחים':       'חובה',
+      'ביטוח לרכב':   'חובה',
+      'קופ"ח':         'חובה',
+      'קופ"ח תרופות':  'חובה',
+      'גנים':          'חובה',
+      'תקשורת':        'חובה',
+      'החזר הלוואה':   'חובה',
+      'סופר':          'גמיש',
+      'דלק':           'גמיש',
+      'הוצאות נסיעה':  'גמיש',
+      'מזון':          'גמיש',
+      'קניות':         'מותרות',
+      'קניות אינטרנט': 'מותרות',
+      'בידור':         'מותרות',
+      'כיף':           'מותרות',
+      'סיגריות':       'מותרות',
+      'אישי':          'מותרות',
+      'ענן':           'מותרות',
+      'AI':            'מותרות',
+      'חד פעמי':       'מותרות',
+      'העברות':        'מותרות',
+      'משיכת מזומן':   'מותרות',
+    },
     importMappings: {}
   }
 }
@@ -168,6 +195,12 @@ function loadData() {
       ...DEFAULT_DATA.settings.people.filter(p => !userPeople.includes(p))
     ]
 
+    // Merge categoryTypes: defaults first, user overrides win
+    const mergedCatTypes = {
+      ...DEFAULT_DATA.settings.categoryTypes,
+      ...(userSettings.categoryTypes || {})
+    }
+
     return {
       version: parsed.version || 1,
       transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
@@ -176,7 +209,8 @@ function loadData() {
         ...userSettings,
         categories: mergedCats,
         people: mergedPeople,
-        rules: mergedRules
+        rules: mergedRules,
+        categoryTypes: mergedCatTypes
       }
     }
   } catch (err) {
