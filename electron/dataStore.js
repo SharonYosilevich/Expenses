@@ -18,6 +18,7 @@ const DEFAULT_DATA = {
       { keyword: 'משכנתא',           category: 'משכנתא',       person: 'בית', isFixed: true,  type: 'expense' },
       { keyword: 'דסק-משכנתא',       category: 'משכנתא',       person: 'בית', isFixed: true,  type: 'expense' },
       { keyword: 'ועד בית',          category: 'בית',          person: 'בית', isFixed: true,  type: 'expense' },
+      { keyword: 'דורגז',            category: 'בית',          person: 'בית', isFixed: true,  type: 'expense' },
       { keyword: 'חברת החשמל',       category: 'בית',          person: 'בית', isFixed: true,  type: 'expense' },
       { keyword: 'מי נתניה',         category: 'בית',          person: 'בית', isFixed: true,  type: 'expense' },
       { keyword: 'ארנונה',           category: 'ארנונה',       person: 'בית', isFixed: true,  type: 'expense' },
