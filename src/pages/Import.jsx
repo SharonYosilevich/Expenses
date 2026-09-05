@@ -525,7 +525,7 @@ export default function Import({ onDone }) {
         ? Math.abs(normalizeAmount(row[amountIdx]))
         : null
 
-      const rule = suggestFromRules(description, rules, Math.abs(signed))
+      const rule = suggestFromRules(description, rules, Math.abs(signed), fileType)
       const categories = settings.categories || []
       const people = settings.people || []
       const fallbackCategory = isForeign && categories.includes('עסקאות חו"ל')

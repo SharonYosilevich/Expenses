@@ -59,8 +59,11 @@ const DEFAULT_DATA = {
       { keyword: 'YELLOW',           category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'סונול',            category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'דור אלון',         category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
-      { keyword: 'תפוז נתניה', category: 'סיגריות', person: 'בית', isFixed: false, type: 'expense', amountCondition: 'whole'   },
-      { keyword: 'תפוז נתניה', category: 'דלק',      person: 'בית', isFixed: false, type: 'expense', amountCondition: 'decimal' },
+      // תפוז נתניה: שלם = סיגריות (לפי כרטיס), עם אגורות = דלק/בית
+      { keyword: 'תפוז נתניה', category: 'סיגריות', person: 'שרון',   isFixed: false, type: 'expense', amountCondition: 'whole',   fileTypes: ['card-5128', 'card-1029'] },
+      { keyword: 'תפוז נתניה', category: 'סיגריות', person: 'יהונתן', isFixed: false, type: 'expense', amountCondition: 'whole',   fileTypes: ['card-5825'] },
+      { keyword: 'תפוז נתניה', category: 'סיגריות', person: 'בית',    isFixed: false, type: 'expense', amountCondition: 'whole'   },
+      { keyword: 'תפוז נתניה', category: 'דלק',      person: 'בית',    isFixed: false, type: 'expense', amountCondition: 'decimal' },
       // ── סופר ──
       { keyword: 'שופרסל',           category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'CARREFOUR',        category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
