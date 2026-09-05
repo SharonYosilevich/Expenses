@@ -105,8 +105,9 @@ const DEFAULT_DATA = {
       { keyword: 'משיכה מכספומט',    category: 'משיכת מזומן',  person: 'בית', isFixed: false, type: 'expense' },
       // ── הכנסות ──
       { keyword: 'משכורת',           category: 'משכורת',       person: 'בית', isFixed: false, type: 'income'  },
-      { keyword: 'סיטיבנק',          category: 'משכורת',       person: 'בית', isFixed: false, type: 'income'  },
-      { keyword: 'עירית חדרה משכורת', category: 'משכורת',      person: 'בית', isFixed: false, type: 'income'  },
+      { keyword: 'סיטיבנק',           category: 'משכורת',       person: 'יהונתן', isFixed: false, type: 'income'  },
+      { keyword: 'עירית חדרה משכורת', category: 'משכורת',      person: 'שרון',   isFixed: false, type: 'income'  },
+      { keyword: 'עיריית חדרה משכורת', category: 'משכורת',     person: 'שרון',   isFixed: false, type: 'income'  },
       { keyword: 'ביטוח לאומי',      category: 'קצבאות',       person: 'בית', isFixed: false, type: 'income'  },
       // ── אישי שרון ──
       { keyword: 'All Jobs',         category: 'אישי',         person: 'שרון', isFixed: false, type: 'expense' },
