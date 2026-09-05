@@ -78,6 +78,11 @@ const DEFAULT_DATA = {
       { keyword: 'דוכני שפע',        category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       // ── קניות ──
       { keyword: 'מקס נתניה',        category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'דלתא',             category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'תמנון עיר ימים',   category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'מועדון שלך',       category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'פיס פלוס',         category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'תו נטען',          category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'נתניה JM',         category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'BOOOM',            category: 'קניות',        person: 'בית', isFixed: false, type: 'expense' },
       { keyword: '83121237',         category: 'קניות אינטרנט', person: 'בית', isFixed: false, type: 'expense' },
