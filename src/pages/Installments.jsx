@@ -9,7 +9,7 @@ export default function Installments() {
   const [month, setMonth] = useState('')
 
   const instTx = useMemo(() => transactions.filter((t) => t.installmentTotal > 1), [transactions])
-  const months = useMemo(() => sortedMonths(instTx), [instTx])
+  const months = useMemo(() => sortedMonths(transactions), [transactions])
 
   // ── Month view: all installment charges in a specific month ──
   const monthRows = useMemo(() => {
