@@ -62,6 +62,7 @@ const DEFAULT_DATA = {
       { keyword: 'תפוז נתניה',       category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
       // ── סופר ──
       { keyword: 'שופרסל',           category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'CARREFOUR',        category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'יוחננוף',          category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'רמי לוי',          category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'ויקטורי',          category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
