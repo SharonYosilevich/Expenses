@@ -3,12 +3,19 @@ import React, { useEffect, useRef, useState } from 'react'
 export default function CategorySelect({ value, categories, onChange, style }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [highlighted, setHighlighted] = useState(0)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const listRef = useRef(null)
 
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus()
+    setHighlighted(0)
   }, [open])
+
+  useEffect(() => {
+    setHighlighted(0)
+  }, [search])
 
   useEffect(() => {
     function onMouseDown(e) {
@@ -21,6 +28,14 @@ export default function CategorySelect({ value, categories, onChange, style }) {
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [])
 
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (!listRef.current) return
+    const items = listRef.current.querySelectorAll('[data-idx]')
+    const el = items[highlighted]
+    if (el) el.scrollIntoView({ block: 'nearest' })
+  }, [highlighted])
+
   const filtered = search.trim()
     ? categories.filter((c) => c.includes(search.trim()))
     : categories
@@ -29,6 +44,22 @@ export default function CategorySelect({ value, categories, onChange, style }) {
     onChange(c)
     setOpen(false)
     setSearch('')
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlighted((h) => Math.min(h + 1, filtered.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted((h) => Math.max(h - 1, 0))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (filtered[highlighted]) select(filtered[highlighted])
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+      setSearch('')
+    }
   }
 
   return (
@@ -59,29 +90,28 @@ export default function CategorySelect({ value, categories, onChange, style }) {
             placeholder="חיפוש..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && filtered.length === 1) select(filtered[0])
-              if (e.key === 'Escape') { setOpen(false); setSearch('') }
-            }}
+            onKeyDown={onKeyDown}
             style={{
               padding: '7px 10px', border: 'none', outline: 'none',
               borderBottom: '1px solid var(--gridline)',
               background: 'var(--surface-2)', fontSize: 13, direction: 'rtl'
             }}
           />
-          <div style={{ overflowY: 'auto', maxHeight: 200 }}>
-            {filtered.map((c) => (
+          <div ref={listRef} style={{ overflowY: 'auto', maxHeight: 200 }}>
+            {filtered.map((c, i) => (
               <div
                 key={c}
+                data-idx={i}
                 onClick={() => select(c)}
                 style={{
                   padding: '7px 12px', fontSize: 13, cursor: 'pointer',
-                  background: c === value ? 'rgba(42,120,214,0.12)' : undefined,
+                  background: i === highlighted
+                    ? 'rgba(42,120,214,0.18)'
+                    : c === value ? 'rgba(42,120,214,0.08)' : undefined,
                   fontWeight: c === value ? 600 : undefined,
                   direction: 'rtl'
                 }}
-                onMouseEnter={(e) => { if (c !== value) e.currentTarget.style.background = 'rgba(42,120,214,0.07)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = c === value ? 'rgba(42,120,214,0.12)' : '' }}
+                onMouseEnter={() => setHighlighted(i)}
               >
                 {c}
               </div>
