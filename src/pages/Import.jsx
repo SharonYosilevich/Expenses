@@ -156,12 +156,12 @@ function autoDetectCardFromFile(sheets) {
         if (cardKeyword.test(s)) {
           const allFour = [...s.matchAll(/(\d{4})/g)].map(m => m[1])
           for (const num of allFour) {
-            if (ALL_KNOWN_CARDS.includes(num)) return REPLACED_CARDS[num] || num
+            if (ALL_KNOWN_CARDS.includes(num)) return num
           }
         }
         // Also match cells that are just 4 digits (card number column)
         const d = s.match(digitOnlyPattern)
-        if (d && ALL_KNOWN_CARDS.includes(d[1])) return REPLACED_CARDS[d[1]] || d[1]
+        if (d && ALL_KNOWN_CARDS.includes(d[1])) return d[1]
       }
     }
   }
@@ -367,10 +367,11 @@ export default function Import({ onDone }) {
       const isBankByName = /עובר.?ושב|עו.?ש/i.test(baseName)
 
       // 1b. File name contains a known card number → card (e.g. "דיינרס 1937")
+      // Keep original card number — REPLACED_CARDS mapping is only for status panel
       const cardByFileName = (() => {
         if (isBankByName) return null
         for (const card of ALL_KNOWN_CARDS) {
-          if (baseName.includes(card)) return REPLACED_CARDS[card] || card
+          if (baseName.includes(card)) return card
         }
         return null
       })()
