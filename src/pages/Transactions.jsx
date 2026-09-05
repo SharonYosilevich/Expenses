@@ -320,12 +320,17 @@ export default function Transactions() {
                     >💰</button>
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      value={getVal(t, 'amount')}
-                      onChange={(e) => setEdit(t.id, { amount: parseFloat(e.target.value) || 0 })}
-                      style={{ ...inputStyle, width: 90 }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: getVal(t, 'type') === 'income' ? 'var(--success)' : 'var(--critical)', minWidth: 12 }}>
+                        {getVal(t, 'type') === 'income' ? '+' : '−'}
+                      </span>
+                      <input
+                        type="number"
+                        value={getVal(t, 'amount')}
+                        onChange={(e) => setEdit(t.id, { amount: parseFloat(e.target.value) || 0 })}
+                        style={{ ...inputStyle, width: 90, color: getVal(t, 'type') === 'income' ? 'var(--success)' : 'var(--critical)', fontWeight: 600 }}
+                      />
+                    </div>
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     {dirty ? (
