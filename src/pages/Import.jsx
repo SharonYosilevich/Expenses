@@ -1207,7 +1207,9 @@ function ReviewStep({
                 <td>
                   <input type="checkbox" checked={r.isFixed} onChange={(e) => updateDraft(r._key, { isFixed: e.target.checked })} />
                 </td>
-                <td>{formatMoney(r.amount)}</td>
+                <td style={{ fontWeight: 600, color: r.type === 'income' ? 'var(--success)' : 'var(--critical)', whiteSpace: 'nowrap' }}>
+                  {r.type === 'income' ? '+' : '−'}{formatMoney(r.amount)}
+                </td>
                 <td>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input type="checkbox" checked={r.addRule} onChange={(e) => updateDraft(r._key, { addRule: e.target.checked })} />
