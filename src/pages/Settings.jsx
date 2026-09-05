@@ -184,6 +184,7 @@ export default function Settings() {
                 placeholder="חיפוש קטגוריה..."
                 value={catSearch}
                 onChange={(e) => setCatSearch(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 style={{ flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', fontSize: 13 }}
               />
               <button

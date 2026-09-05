@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const SALT = 'expenses-app-2026'
 
@@ -24,6 +24,40 @@ export default function LockScreen({ pinHash, recoveryCodeHash, onUnlock }) {
   const [shaking, setShaking] = useState(false)
   const [showRecovery, setShowRecovery] = useState(false)
   const [recoveryVal, setRecoveryVal] = useState('')
+  const pinRef = useRef('')
+  useEffect(() => { pinRef.current = pin }, [pin])
+
+  // Keyboard support — digits, Backspace, Enter
+  useEffect(() => {
+    async function onKeyDown(e) {
+      if (showRecovery) return
+      if (e.key >= '0' && e.key <= '9') {
+        const cur = pinRef.current
+        if (cur.length >= 8) return
+        const next = cur + e.key
+        setPin(next)
+        setError(false)
+        pinRef.current = next
+        if (next.length === 4) {
+          const hash = await hashPin(next)
+          if (hash === pinHash || (recoveryCodeHash && hash === recoveryCodeHash)) { onUnlock() }
+          else { setShaking(true); setError(true); setTimeout(() => { setShaking(false); setPin(''); pinRef.current = ''; setError(false) }, 800) }
+        }
+      } else if (e.key === 'Backspace') {
+        setPin((p) => { const n = p.slice(0, -1); pinRef.current = n; return n })
+        setError(false)
+      } else if (e.key === 'Enter') {
+        const cur = pinRef.current
+        if (cur.length >= 4) {
+          const hash = await hashPin(cur)
+          if (hash === pinHash || (recoveryCodeHash && hash === recoveryCodeHash)) { onUnlock() }
+          else { setShaking(true); setError(true); setTimeout(() => { setShaking(false); setPin(''); pinRef.current = ''; setError(false) }, 800) }
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showRecovery, pinHash, recoveryCodeHash, onUnlock])
 
   async function tryUnlock(code) {
     const hash = await hashPin(code)
