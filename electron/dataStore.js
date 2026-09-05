@@ -111,6 +111,9 @@ const DEFAULT_DATA = {
       { keyword: 'עירית חדרה משכורת', category: 'משכורת',      person: 'שרון',   isFixed: false, type: 'income'  },
       { keyword: 'עיריית חדרה משכורת', category: 'משכורת',     person: 'שרון',   isFixed: false, type: 'income'  },
       { keyword: 'ביטוח לאומי',      category: 'קצבאות',       person: 'בית', isFixed: false, type: 'income'  },
+      // ── אישי ילדים ──
+      { keyword: 'מתנ"ס',            category: 'אישי',         person: 'אביתר', isFixed: false, type: 'expense' },
+      { keyword: 'רשת פנאי וקהילה',  category: 'אישי',         person: 'אביתר', isFixed: false, type: 'expense' },
       // ── אישי שרון ──
       { keyword: 'All Jobs',         category: 'אישי',         person: 'שרון', isFixed: false, type: 'expense' },
     ],
