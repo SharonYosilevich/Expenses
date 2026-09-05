@@ -28,16 +28,23 @@ export function isLikelyBalanceCarry(description) {
 
 /**
  * Longest-keyword-wins match against the description.
+ * Optional amount: if a rule has amountCondition ('whole' | 'decimal'), it is
+ * only applied when the amount matches (whole = no cents, decimal = has cents).
  */
-export function suggestFromRules(description, rules) {
+export function suggestFromRules(description, rules, amount = null) {
   const d = (description || '').trim()
   if (!d) return null
   let best = null
   for (const rule of rules) {
     if (!rule.keyword) continue
-    if (d.includes(rule.keyword)) {
-      if (!best || rule.keyword.length > best.keyword.length) best = rule
+    if (!d.includes(rule.keyword)) continue
+    // Check optional amount condition
+    if (rule.amountCondition && amount !== null) {
+      const isWhole = Math.abs(amount) % 1 === 0
+      if (rule.amountCondition === 'whole'   && !isWhole) continue
+      if (rule.amountCondition === 'decimal' &&  isWhole) continue
     }
+    if (!best || rule.keyword.length > best.keyword.length) best = rule
   }
   return best
 }

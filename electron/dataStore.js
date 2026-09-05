@@ -59,7 +59,8 @@ const DEFAULT_DATA = {
       { keyword: 'YELLOW',           category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'סונול',            category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'דור אלון',         category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
-      { keyword: 'תפוז נתניה',       category: 'דלק',          person: 'בית', isFixed: false, type: 'expense' },
+      { keyword: 'תפוז נתניה', category: 'סיגריות', person: 'בית', isFixed: false, type: 'expense', amountCondition: 'whole'   },
+      { keyword: 'תפוז נתניה', category: 'דלק',      person: 'בית', isFixed: false, type: 'expense', amountCondition: 'decimal' },
       // ── סופר ──
       { keyword: 'שופרסל',           category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
       { keyword: 'CARREFOUR',        category: 'סופר',         person: 'בית', isFixed: false, type: 'expense' },
