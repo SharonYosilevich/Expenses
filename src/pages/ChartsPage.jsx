@@ -121,10 +121,17 @@ export default function ChartsPage() {
               <div className="empty-state">אין הוצאות משתנות בחודש זה</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} layout="vertical" margin={{ right: 20 }}>
+                <BarChart data={barData} layout="vertical" margin={{ right: 20, left: 5 }}>
                   <CartesianGrid horizontal={false} stroke="var(--gridline)" />
                   <XAxis type="number" stroke="var(--text-muted)" fontSize={12} />
-                  <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={12} width={110} tick={{ textAnchor: 'end', direction: 'rtl' }} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke="var(--text-muted)"
+                    fontSize={12}
+                    width={120}
+                    tick={<HebrewTick />}
+                  />
                   <Tooltip formatter={(v) => formatMoney(v)} contentStyle={tooltipStyle} />
                   <Bar dataKey="value" radius={[4, 4, 4, 4]} maxBarSize={22} onClick={(d) => openDrill(d.name)} style={{ cursor: 'pointer' }}>
                     {barData.map((d) => (
@@ -199,6 +206,24 @@ export default function ChartsPage() {
         </ResponsiveContainer>
       </div>
     </div>
+  )
+}
+
+function HebrewTick({ x, y, payload }) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={4}
+        textAnchor="end"
+        fill="var(--text-secondary)"
+        fontSize={12}
+        direction="rtl"
+      >
+        {payload?.value}
+      </text>
+    </g>
   )
 }
 
